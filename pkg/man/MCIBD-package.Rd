@@ -14,7 +14,7 @@ Package: \tab MCIBD\cr
 Type: \tab Package\cr
 Version: \tab 0.1\cr
 Date: \tab 2009-10-01\cr
-License: \tab GPL-2\cr
+License: \tab GPL\cr
 Depends: \tab \code{sfsmisc}\cr
 Suggests: \tab \code{snow, snowfall}\cr
 }

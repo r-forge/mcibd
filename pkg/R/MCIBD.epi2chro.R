@@ -1,5 +1,5 @@
 MCIBD.epi2chro <-
-function(dis = 5, n.F2, pedigree = NULL, cnF2freq.out1 = NULL, cnF2freq.out2 = NULL, output.Z = FALSE, read.file = FALSE, segregation = NULL, mc.size = 99, hpc = FALSE, n.cpus = 2) {
+function(dis = 5, n.F2, pedigree = NULL, cnF2freq.out1 = NULL, cnF2freq.out2 = NULL, output.Z = "none", read.file = FALSE, segregation = NULL, mc.size = 99, hpc = FALSE, n.cpus = 2) {
 ## --------------------------------------------- ##
 ##       Monte Carlo IBD Matrix Calculator       ##
 ##      cnF2freq has to be run before this.      ##
@@ -51,13 +51,14 @@ cat("\n")
 cat("OKAY.", "\n")
 cat("\n")
 
-if (is.null(segregation)) {
-	n.founder <- 0
+
+n.founder <- 0
+is.founder <- sum(pedi[n.founder + 1,]) == 0
+while (is.founder) {
+	n.founder <- n.founder + 1
 	is.founder <- sum(pedi[n.founder + 1,]) == 0
-	while (is.founder) {
-		n.founder <- n.founder + 1
-		is.founder <- sum(pedi[n.founder + 1,]) == 0
-	}
+}
+if (is.null(segregation)) {
 	segregation <- 1:(2*n.founder)
 }
 
@@ -187,23 +188,34 @@ cat("\n")
 ## Monte Carlo Sampling ##
 MIsize <- mc.size
 nf2 <- n.F2
+if (output.Z == "none") {
+	exname <- ".ibd"
+	type <- "IBD"
+	dim2 <- nf2
+}
+if (output.Z == "av" | output.Z == "pc") {
+	exname <- ".z"
+	type <- "Incidence"
+	dim2 <- 2*n.founder	
+}
+	
 if (!hpc) {
 	## Single Core
 	t0 <- proc.time()[3]
 	cat("One master is doing its jobs ...", "\n")
 	for (p1 in loci1) {
 		for (p2 in loci2) {
-			sumPi <- matrix(0, nf2, nf2)
+			if (output.Z == "av") sumPi <- matrix(0, nf2, dim2) else sumPi <- matrix(0, nf2, nf2)
 			for(i in 1:MIsize) {
 				Z1 <- samplecarl(carlout = carlout1, position = p1 + 1, pedigree = pedi, f2id = f2id)
 				Z2 <- samplecarl(carlout = carlout2, position = p2 + 1, pedigree = pedi, f2id = f2id)
 				Z1 <- sgg(Z1, segregation)
 				Z2 <- sgg(Z2, segregation)
-				if (!output.Z) {
+				if (output.Z == "none" | output.Z == "pc") {
 					Pi1 <- .5*Z1%*%t(Z1)
 					Pi2 <- .5*Z2%*%t(Z2)
 				}
-				else {
+				if (output.Z == "av") {
 					Pi1 <- Z1
 					Pi2 <- Z2
 				}
@@ -214,9 +226,9 @@ if (!hpc) {
 			}
 			cat("\n")
 			meanPi <- sumPi/MIsize
-			filename <- paste(paste(p1, p2, sep = "_x_"), ".ibd", sep = "")
+			filename <- paste(paste(p1, p2, sep = "_x_"), exname, sep = "")
 			write.table(meanPi, filename, col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t")
-			cat(paste("IBD matrix of dimension", nf2, "x", nf2, "for epistatic loci", p1, "and", p2, "is accomplished, where", MIsize, "imputes were sampled.", sep = " "), "\n")
+			cat(paste(type, "matrix of dimension", nf2, "x", dim2, "for epistatic loci", p1, "and", p2, "is accomplished, where", MIsize, "imputes were sampled.", sep = " "), "\n")
 		}
 	}
 	t1 <- proc.time()[3] - t0
@@ -228,17 +240,17 @@ else {
 	require(snowfall, quietly = TRUE)
 	sfInit(parallel = TRUE, cpus = n.cpus, type = "SOCK")
 	slavejob <- function(idx) {
-		sumPi <- matrix(0, nf2, nf2)
+		if (output.Z == "av") sumPi <- matrix(0, nf2, dim2) else sumPi <- matrix(0, nf2, nf2)
 		for(i in 1:MIsize) {
 			Z1 <- samplehere(here = here1, pedigree = pedi, f2id = f2id)
 			Z2 <- samplehere(here = here2, pedigree = pedi, f2id = f2id)
 			Z1 <- sgg(Z1, segregation)
 			Z2 <- sgg(Z2, segregation)
-			if (!output.Z) {
+			if (output.Z == "none" | output.Z == "pc") {
 				Pi1 <- .5*Z1%*%t(Z1)
 				Pi2 <- .5*Z2%*%t(Z2)
 			}
-			else {
+			if (output.Z == "av") {
 				Pi1 <- Z1
 				Pi2 <- Z2
 			}
@@ -259,40 +271,48 @@ else {
 			}
 			cat("Broadcasting objects to slaves ...", "\n")
 			sfExport("MIsize")
-			setTxtProgressBar(pb, 1/9)
+			setTxtProgressBar(pb, 1/10)
 			sfExport("binary")
-			setTxtProgressBar(pb, 2/9)
+			setTxtProgressBar(pb, 2/10)
 			sfExport("f2id")
-			setTxtProgressBar(pb, 3/9)
+			setTxtProgressBar(pb, 3/10)
 			sfExport("nf2")
-			setTxtProgressBar(pb, 4/9)
+			setTxtProgressBar(pb, 4/10)
+			sfExport("dim2")
+			setTxtProgressBar(pb, 5/10)
 			sfExport("pedi")
-			setTxtProgressBar(pb, 5/9)
+			setTxtProgressBar(pb, 6/10)
 			sfExport("here1")
-			setTxtProgressBar(pb, 6/9)
+			setTxtProgressBar(pb, 7/10)
 			sfExport("here2")
-			setTxtProgressBar(pb, 7/9)
+			setTxtProgressBar(pb, 8/10)
 			sfExport("samplehere")
-			setTxtProgressBar(pb, 8/9)
+			setTxtProgressBar(pb, 9/10)
 			sfExport("sgg")
-			setTxtProgressBar(pb, 9/9)
+			setTxtProgressBar(pb, 10/10)
 			cat("\n")
 			cat("OKAY.", "\n")
 			cat("\n")
 			cat("Slaves are doing their jobs ...", "\n")
 			result <- sfLapply(1:n.cpus, slavejob)
 			cat("\n")
-			cat("Final calculation for the IBD matrix ...", "\n")
-			sumPi <- matrix(0, nf2, nf2)
+			cat("Final calculation for the", type, "matrix ...", "\n")
+			if (output.Z == "av") sumPi <- matrix(0, nf2, dim2) else sumPi <- matrix(0, nf2, nf2)
 			for(sn in 1:n.cpus) {
 				sumPi <- sumPi + result[[sn]]
 				setTxtProgressBar(pb, sn/n.cpus)
 			}
 			cat("\n")
 			meanPi <- sumPi/n.cpus
-			filename <- paste(paste(p1, p2, sep = "_x_"), ".ibd", sep = "")
+			if (output.Z == "pc") {
+				A <- eigen(meanPi)
+				v <- A$values[1:(2*n.founder)]
+				pc <- A$vectors[,1:(2*n.founder)]
+				meanPi <- pc%*%diag(sqrt(v))
+			}
+			filename <- paste(paste(p1, p2, sep = "_x_"), exname, sep = "")
 			write.table(meanPi, filename, col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t")
-			cat(paste("IBD matrix of dimension", nf2, "x", nf2, "for epistatic loci", p1, "and", p2, "is accomplished, where", MIsize, "imputes were sampled.", sep = " "), "\n")
+			cat(paste(type, "matrix of dimension", nf2, "x", dim2, "for epistatic loci", p1, "and", p2, "is accomplished, where", MIsize*n.cpus, "imputes were sampled.", sep = " "), "\n")
 			cat("\n")
 			rm(result)
 		}

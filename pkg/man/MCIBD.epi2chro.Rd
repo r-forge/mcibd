@@ -10,7 +10,7 @@ Estimating Epistatic Identity-By-Descent (IBD) Matrices for Two Chromosomes
 }
 \usage{
 MCIBD.epi2chro(dis = 5, n.F2, pedigree = NULL, cnF2freq.out1 = NULL, 
-               cnF2freq.out2 = NULL, output.Z = FALSE, read.file = FALSE, 
+               cnF2freq.out2 = NULL, output.Z = "none", read.file = FALSE, 
                segregation = NULL, mc.size = 99, hpc = FALSE, n.cpus = 2)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -20,7 +20,7 @@ MCIBD.epi2chro(dis = 5, n.F2, pedigree = NULL, cnF2freq.out1 = NULL,
   \item{pedigree}{a matrix or data.frame or file containing pedigree information. For file (when \code{read.file} is \code{TRUE}), see \code{pedi.ric} in \code{other.zip} or \code{other.tar} for example.}
   \item{cnF2freq.out1}{a matrix or data.frame containing the output probabilities of chromosome 1 from cnF2freq. For file (when \code{read.file} is \code{TRUE}), see \code{chro.ric} in \code{other.zip} or \code{other.tar} for example.}
   \item{cnF2freq.out2}{a matrix or data.frame containing the output probabilities of chromosome 2 from cnF2freq. For file (when \code{read.file} is \code{TRUE}), see \code{chro.ric} in \code{other.zip} or \code{other.tar} for example.}
-  \item{output.Z}{logical. If \code{TRUE}, average incidence matrix Z is estimated instead of the corresponding IBD matrix.}
+  \item{output.Z}{a string indicates the type of output. If \code{"av"}, average incidence matrix Z is estimated instead of the corresponding IBD matrix; If \code{"all"}, the IBD matrix is still estimated as default but with all the incidence matrix imputes output in folder "Zall"; If \code{"pc"}, an incidence matrix containing the principle components of the corresponding IBD matrix is output.}
   \item{read.file}{logical. If \code{TRUE}, data is loaded from files, where a pedigree information file is specified by \code{pedigree} and a probabilities output file \code{cnF2freq.out} in the working directory.}
   \item{segregation}{a vector specifying the segregation of founder alleles. (See Details.)}
   \item{mc.size}{an integer setting the sample size of the Monte Carlo sampling for one CPU.}
@@ -41,4 +41,10 @@ Xia Shen
 }
 \seealso{
 \code{\link{MCIBD}}, \code{\link{MCIBD.chro}}, \code{\link{MCIBD-package}}
+}
+\examples{
+data(pedigree)
+data(probabilities)
+
+MCIBD.epi2chro(80, 191, pedigree, probabilities, probabilities, mc.size = 10)
 }

@@ -12,8 +12,8 @@ Monte Carlo Identity-By-Descent Matrix Estimation
 \tabular{ll}{
 Package: \tab MCIBD\cr
 Type: \tab Package\cr
-Version: \tab 0.1\cr
-Date: \tab 2009-10-01\cr
+Version: \tab 0.2\cr
+Date: \tab 2009-10-17\cr
 License: \tab GPL\cr
 Depends: \tab \code{sfsmisc}\cr
 Suggests: \tab \code{snow, snowfall}\cr

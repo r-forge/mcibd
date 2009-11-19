@@ -1,5 +1,5 @@
 MCIBD.chro <-
-function(dis = 5, n.F2, pedigree = NULL, cnF2freq.out = NULL, output.Z = "none", read.file = FALSE, segregation = NULL, mc.size = 99, hpc = FALSE, n.cpus = 2) {
+function(dis = 5, n.F2, pedigree = NULL, cnF2freq.out = NULL, IBD.type = "genotypic", output.Z = "none", read.file = FALSE, segregation = NULL, mc.size = 99, hpc = FALSE, n.cpus = 2) {
 ## --------------------------------------------- ##
 ##       Monte Carlo IBD Matrix Calculator       ##
 ##      cnF2freq has to be run before this.      ##
@@ -61,52 +61,59 @@ cat("Functions Loading ...", "\n")
 require(sfsmisc, quietly = TRUE)
 binary <- NULL
 for (i in 1:64) {binary <- rbind(binary, as.numeric(digitsBase(i-1,,6)))}
-samplecarl <- function(carlout, position, pedigree, f2id) {
-	here <- Z <- NULL
-	for (id in f2id) {here <- rbind(here, carlout[[id]][position,])}
-	for (i in 1:length(f2id)) {
+	samplecarl <- function(carlout, position, pedigree, f2id, type) {
+		here <- Z <- NULL
+		for (id in f2id) {here <- rbind(here, carlout[[id]][position,])}
+		for (i in 1:length(f2id)) {
 		case <- binary[sample(1:64,1,prob=here[i,]),]
-		if (case[6]==0) {
-			if (case[5]==1) {
-				a1 <- pedigree[pedigree[f2id[i],1],1]*2 - 1
+			if (case[6]==0) {
+				if (case[5]==1) {
+					a1 <- pedigree[pedigree[f2id[i],1],1]*2 - 1
+				}
+				else {
+					a1 <- pedigree[pedigree[f2id[i],1],1]*2
+				}
 			}
 			else {
-				a1 <- pedigree[pedigree[f2id[i],1],1]*2
+				if (case[4]==1) {
+					a1 <- pedigree[pedigree[f2id[i],1],2]*2 - 1
+				}
+				else {
+					a1 <- pedigree[pedigree[f2id[i],1],2]*2
+				}
 			}
-		}
-		else {
-			if (case[4]==1) {
-				a1 <- pedigree[pedigree[f2id[i],1],2]*2 - 1
-			}
-			else {
-				a1 <- pedigree[pedigree[f2id[i],1],2]*2
-			}
-		}
-		if (case[3]==0) {
-			if (case[2]==1) {
-				a2 <- pedigree[pedigree[f2id[i],2],1]*2 - 1
-			}
-			else {
-				a2 <- pedigree[pedigree[f2id[i],2],1]*2
-			}
-		}
-		else {
-			if (case[1]==1) {
-				a2 <- pedigree[pedigree[f2id[i],2],2]*2 - 1
+			if (case[3]==0) {
+				if (case[2]==1) {
+					a2 <- pedigree[pedigree[f2id[i],2],1]*2 - 1
+				}
+				else {
+					a2 <- pedigree[pedigree[f2id[i],2],1]*2
+				}
 			}
 			else {
-				a2 <- pedigree[pedigree[f2id[i],2],2]*2
+				if (case[1]==1) {
+					a2 <- pedigree[pedigree[f2id[i],2],2]*2 - 1
+				}
+				else {
+					a2 <- pedigree[pedigree[f2id[i],2],2]*2
+				}
+			}
+			if (type == "genotypic") {
+				Z.line <- rep(0,length(segregation))
+				Z.line[c(a1, a2)] <- 1
+				Z <- rbind(Z, Z.line)
+			}
+			if (type == "gametic") {
+				Z.line1 <- Z.line2 <- rep(0,length(segregation))
+				Z.line1[a1] <- Z.line2[a2] <- 1
+				Z <- rbind(Z, Z.line1, Z.line2)
 			}
 		}
-		Z.line <- rep(0,length(segregation))
-		Z.line[c(a1,a2)] <- 1
-		Z <- rbind(Z,Z.line)
+		dimnames(Z) <- list(NULL, NULL)
+		return(Z)
 	}
-	dimnames(Z) <- list(NULL,NULL)
-	return(Z)
-}
 setTxtProgressBar(pb, .5)
-samplehere <- function(here, pedigree, f2id) {
+samplehere <- function(here, pedigree, f2id, type) {
 	Z <- NULL
 	for (i in 1:length(f2id)) {
 	case <- binary[sample(1:64,1,prob=here[i,]),]
@@ -142,9 +149,16 @@ samplehere <- function(here, pedigree, f2id) {
 				a2 <- pedigree[pedigree[f2id[i],2],2]*2
 			}
 		}
-		Z.line <- rep(0,length(segregation))
-		Z.line[c(a1,a2)] <- 1
-		Z <- rbind(Z,Z.line)
+		if (type == "genotypic") {
+			Z.line <- rep(0,length(segregation))
+			Z.line[c(a1, a2)] <- 1
+			Z <- rbind(Z, Z.line)
+		}
+		if (type == "gametic") {
+			Z.line1 <- Z.line2 <- rep(0,length(segregation))
+			Z.line1[a1] <- Z.line2[a2] <- 1
+			Z <- rbind(Z, Z.line1, Z.line2)
+		}
 	}
 	dimnames(Z) <- list(NULL,NULL)
 	return(Z)
@@ -180,7 +194,7 @@ cat("\n")
 
 ## Monte Carlo Sampling ##
 MIsize <- mc.size
-nf2 <- n.F2
+if (IBD.type == "genotypic") nf2 <- n.F2 else nf2 <- 2*n.F2
 if (output.Z == "all") dir.create("Zall")
 if (output.Z == "none" | output.Z == "all") {
 	exname <- ".ibd"
@@ -201,7 +215,7 @@ if (!hpc) {
 		if (output.Z == "av") sumPi <- matrix(0, nf2, dim2) else sumPi <- matrix(0, nf2, nf2)
 		if (output.Z == "all") dir.create(paste("Zall/", p, sep = ""))
 		for(i in 1:MIsize) {
-			Z <- samplecarl(carlout = carlout, position = p + 1, pedigree = pedi, f2id = f2id)
+			Z <- samplecarl(carlout = carlout, position = p + 1, pedigree = pedi, f2id = f2id, type = IBD.type)
 			Z <- sgg(Z, segregation)
 			if (output.Z == "none" | output.Z == "pc") {
 				Pi <- .5*Z%*%t(Z)
@@ -240,7 +254,7 @@ else {
 	slavejob <- function(idx) {
 		if (output.Z == "av") sumPi <- matrix(0, nf2, dim2) else sumPi <- matrix(0, nf2, nf2)
 		for(i in 1:MIsize) {
-			Z <- samplehere(here = here, pedigree = pedi, f2id = f2id)
+			Z <- samplehere(here = here, pedigree = pedi, f2id = f2id, type = IBD.type)
 			Z <- sgg(Z, segregation)
 			if (output.Z == "none" | output.Z == "pc") {
 				Pi <- .5*Z%*%t(Z)

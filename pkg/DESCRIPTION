@@ -1,11 +1,11 @@
 Package: MCIBD
 Type: Package
 Title: Monte Carlo Identity-By-Descent Matrix Estimation
-Version: 0.2
-Date: 2009-10-17
+Version: 0.3
+Date: 2009-11-13
 Author: Xia Shen
 Maintainer: Xia Shen <xia.shen@lcb.uu.se>
-Description: This is a package implemented for flexible identity-by-descent (IBD) matrix estimation in F2 pedigrees. The IBD matrix estimate is approached by a Monte Carlo strategy, where the segregation of founder alleles is easy to set up. Epistatic IBD matrices can also be calculated for two arbitrary loci. Such IBD matrix estimates are typically used in variance component quantitative trait loci (QTL) analysis. Parallelization is implemented to enhance the performance of Monte Carlo sampling.
+Description: This is a package implemented for flexible identity-by-descent (IBD) matrix estimation in F2 pedigrees. The IBD matrix estimate is approached by a Monte Carlo strategy, where the segregation of founder alleles is easy to define. Epistatic IBD matrices can also be calculated for two arbitrary loci. Such IBD matrix estimates are typically used in variance component quantitative trait loci (QTL) analysis. Parallelization is implemented to enhance the performance of Monte Carlo sampling.
 License: GPL
 Depends: sfsmisc
 Suggests: snow, snowfall

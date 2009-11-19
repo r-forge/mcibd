@@ -1,9 +1,9 @@
 MCIBD <-
-function(loci, n.F2, pedigree = NULL, cnF2freq.out = NULL, output.Z = "none", read.file = FALSE, segregation = NULL, mc.size = 99, hpc = FALSE, n.cpus = 2) {
+function(loci, n.F2, pedigree = NULL, cnF2freq.out = NULL, IBD.type = "genotypic", output.Z = "none", read.file = FALSE, segregation = NULL, mc.size = 99, hpc = FALSE, n.cpus = 2) {
 ## --------------------------------------------- ##
 ##       Monte Carlo IBD Matrix Calculator       ##
 ##      cnF2freq has to be run before this.      ##
-##      Xia.Shen@lcb.uu.se ---2009-10-17---      ##
+##      Xia.Shen@lcb.uu.se ---2009-11-13---      ##
 ## --------------------------------------------- ##
 	
 ## !! PACKAGE REQUIREMENTS: sfsmisc, snow (for HPC), snowfall (for HPC)
@@ -63,7 +63,7 @@ cat("Functions Loading ...", "\n")
 require(sfsmisc, quietly = TRUE)
 binary <- NULL
 for (i in 1:64) {binary <- rbind(binary, as.numeric(digitsBase(i-1,,6)))}
-	samplecarl <- function(carlout, position, pedigree, f2id) {
+	samplecarl <- function(carlout, position, pedigree, f2id, type) {
 		here <- Z <- NULL
 		for (id in f2id) {here <- rbind(here, carlout[[id]][position,])}
 		for (i in 1:length(f2id)) {
@@ -100,11 +100,18 @@ for (i in 1:64) {binary <- rbind(binary, as.numeric(digitsBase(i-1,,6)))}
 					a2 <- pedigree[pedigree[f2id[i],2],2]*2
 				}
 			}
-			Z.line <- rep(0,length(segregation))
-			Z.line[c(a1,a2)] <- 1
-			Z <- rbind(Z,Z.line)
+			if (type == "genotypic") {
+				Z.line <- rep(0,length(segregation))
+				Z.line[c(a1, a2)] <- 1
+				Z <- rbind(Z, Z.line)
+			}
+			if (type == "gametic") {
+				Z.line1 <- Z.line2 <- rep(0,length(segregation))
+				Z.line1[a1] <- Z.line2[a2] <- 1
+				Z <- rbind(Z, Z.line1, Z.line2)
+			}
 		}
-		dimnames(Z) <- list(NULL,NULL)
+		dimnames(Z) <- list(NULL, NULL)
 		return(Z)
 	}
 setTxtProgressBar(pb, .5)
@@ -140,7 +147,7 @@ cat("\n")
 MIsize <- mc.size
 p <- loci
 if (length(p) == 2) {epistasis <- TRUE} else {epistasis <- FALSE}
-nf2 <- n.F2
+if (IBD.type == "genotypic") nf2 <- n.F2 else nf2 <- 2*n.F2
 if (output.Z == "all") {dir.create("Zall")}
 if (output.Z == "none" | output.Z == "all") {
 	exname <- ".ibd"
@@ -160,7 +167,7 @@ if (!hpc) {
 	cat("One master is doing its jobs ...", "\n")
 	if (!epistasis) {
 		for(i in 1:MIsize) {
-			Z <- samplecarl(carlout = carlout, position = p + 1, pedigree = pedi, f2id = f2id)
+			Z <- samplecarl(carlout = carlout, position = p + 1, pedigree = pedi, f2id = f2id, type = IBD.type)
 			Z <- sgg(Z, segregation)
 			if (output.Z == "none" | output.Z == "pc") {
 				Pi <- .5*Z%*%t(Z)
@@ -179,9 +186,9 @@ if (!hpc) {
 	}
 	else {
 		for(i in 1:MIsize) {
-			Z1 <- samplecarl(carlout = carlout, position = p[1] + 1, pedigree = pedi, f2id = f2id)
+			Z1 <- samplecarl(carlout = carlout, position = p[1] + 1, pedigree = pedi, f2id = f2id, type = IBD.type)
 			Z1 <- sgg(Z1, segregation)
-			Z2 <- samplecarl(carlout = carlout, position = p[2] + 1, pedigree = pedi, f2id = f2id)
+			Z2 <- samplecarl(carlout = carlout, position = p[2] + 1, pedigree = pedi, f2id = f2id, type = IBD.type)
 			Z2 <- sgg(Z2, segregation)
 			if (output.Z == "none" | output.Z == "all" | output.Z == "pc") {
 				Pi1 <- .5*Z1%*%t(Z1)
@@ -230,7 +237,7 @@ else {
 		if (output.Z == "av") sumPi <- matrix(0, nf2, dim2) else sumPi <- matrix(0, nf2, nf2)
 		if (!epistasis) {
 			for(i in 1:MIsize) {
-				Z <- samplecarl(carlout = carlout, position = p + 1, pedigree = pedi, f2id = f2id)
+				Z <- samplecarl(carlout = carlout, position = p + 1, pedigree = pedi, f2id = f2id, type = IBD.type)
 				Z <- sgg(Z, segregation)
 				if (output.Z == "none" | output.Z == "pc") {
 					Pi <- .5*Z%*%t(Z)
@@ -250,9 +257,9 @@ else {
 		}
 		else {
 			for(i in 1:MIsize) {
-				Z1 <- samplecarl(carlout = carlout, position = p[1] + 1, pedigree = pedi, f2id = f2id)
+				Z1 <- samplecarl(carlout = carlout, position = p[1] + 1, pedigree = pedi, f2id = f2id, type = IBD.type)
 				Z1 <- sgg(Z1, segregation)
-				Z2 <- samplecarl(carlout = carlout, position = p[2] + 1, pedigree = pedi, f2id = f2id)
+				Z2 <- samplecarl(carlout = carlout, position = p[2] + 1, pedigree = pedi, f2id = f2id, type = IBD.type)
 				Z2 <- sgg(Z2, segregation)
 				if (output.Z == "none" | output.Z == "all" | output.Z == "pc") {
 					Pi1 <- .5*Z1%*%t(Z1)

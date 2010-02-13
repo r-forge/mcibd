@@ -65,7 +65,7 @@ binary <- NULL
 for (i in 1:64) {binary <- rbind(binary, as.numeric(digitsBase(i-1,,6)))}
 	samplecarl <- function(carlout, position, pedigree, f2id, type) {
 		here <- Z <- NULL
-		for (id in f2id) {here <- rbind(here, carlout[[id]][position,])}
+		for (id in f2id) {here <- rbind(here, rbind(carlout[[id]])[position,])}
 		for (i in 1:length(f2id)) {
 		case <- binary[sample(1:64,1,prob=here[i,]),]
 			if (case[6]==0) {

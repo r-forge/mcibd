@@ -12,9 +12,9 @@ Monte Carlo Identity-By-Descent Matrix Estimation
 \tabular{ll}{
 Package: \tab MCIBD\cr
 Type: \tab Package\cr
-Version: \tab 0.3\cr
-Date: \tab 2009-11-13\cr
-License: \tab GPL\cr
+Version: \tab 0.4\cr
+Date: \tab 2010-08-26\cr
+License: \tab Unlimited\cr
 Depends: \tab \code{sfsmisc}\cr
 Suggests: \tab \code{snow, snowfall}\cr
 }
@@ -27,6 +27,6 @@ Maintainer: Xia Shen <xia.shen@lcb.uu.se>
 \references{
 Andersson, L., Haley, C.S., Ellegren, H., Knott, S.A., Johansson, M., Andersson, K., Andersson-Eklund L., Edfors-Lilja, I., Fredholm, M., Hansson, I., Hakansson, J. and Lundstrom, K. (1994). \emph{Genetic Mapping of Quantitative Trait Loci for Growth and Fatness in Pigs}. Science, 263: 1771-1774. \cr \cr
 Nettelblad, C., Holmgren, S., Crooks, L. and Carlborg, O. (2009). \emph{cnF2freq: Efficient Determination of Genotype and Haplotype Probabilities in Outbred Populations Using Markov Models}. Lecture Notes in Bioinformatics (LNBI), 5462: 307-319, Springer-Verlag Berlin Heidelberg. \cr \cr
-Shen, X., Ronnegard, L. and Carlborg, O. (2009). \emph{Flexible Identity-By-Descent Matrix Estimation with Given Base Generation Structures in F2 Intercross Designs}. (Manuscript) \cr \cr
-Shen, X., Ronnegard, L. and Carlborg, O. (2009). \emph{A Monte Carlo Full Likelihood Approach in Variance Component Quantitative Trait Loci Analysis}. (Manuscript)
+Shen, X., Nettelblad, C., Ronnegard, L. and Carlborg, O. (2009). \emph{Flexible Identity-By-Descent Matrix Estimation with Given Base Generation Structures in F2 Intercross Designs}. \bold{Package Vignette}. \cr \cr
+Shen, X., Ronnegard, L. and Carlborg, O. (2009). \emph{Evaluating A Full Likelihood Approach for Variance Component Quantitative Trait Loci Analyses}. \bold{Submitted}.
 }

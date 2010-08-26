@@ -1,0 +1,16 @@
+% $Id: MCIBD.Rnw $
+
+%\VignetteIndexEntry{The MCIBD Package}
+%\VignetteKeywords{MCIBD}
+%\VignettePackage{MCIBD}
+
+\documentclass{article}
+
+\usepackage{pdfpages}
+
+\begin{document}
+
+\includepdf[pages={1-5}, fitpaper=true]{MCIBD_note_100819.pdf}
+
+\end{document}
+
